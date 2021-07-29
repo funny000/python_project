@@ -1,0 +1,22 @@
+{
+	"apply": "object detection",
+	"epochs": 50,
+	"batch_size":4,
+	"weights": "/yolov5s.pt",
+	"framework": "pytorch",
+	"model_file": "/output/yolov5s.pt",
+	"model_method":"train",
+	"net_name":"yolov5s",
+	"net_shape":[3, 608, 608],
+	"process": "process.json",
+	"data":{
+			"data_type":"folder",
+			"data_src":"/dataset/train/images",
+			"data_src_format":".jpg",
+			"data_label":"/dataset/train/lables",
+			"data_label_format":".xml",
+			"class_number":1,
+			"class_dict":{"landslide":0}
+		}
+}
+
