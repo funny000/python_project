@@ -1,0 +1,17 @@
+{
+	"name":"yolov5s",
+	"description": "该模型是基于pytorch 1.7.1深度学习框架",
+	"language": "python3.7",
+	"weight_format": "th",
+	
+	
+	"networkImage": "model.jpg",
+	"input_h": "608",
+	"input_w": "608",
+	"input_data_type": "byte",
+	"input_interval": "bip",
+	"input_bands": "3",
+	"output_format": "ndarray ,geojson",
+	"output_data_type": "byte",
+	"output_bands": "3"
+}
