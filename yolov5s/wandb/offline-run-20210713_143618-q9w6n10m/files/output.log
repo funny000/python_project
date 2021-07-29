@@ -1,0 +1,45 @@
+
+Downloading https://github.com/ultralytics/yolov5/releases/download/v5.0/yolov5s.pt to /media/lxd/workspace/aricraft_oiltank/yolov5s/yolov5s.pt...
+Traceback (most recent call last):
+  File "/media/lxd/workspace/Aricraft_oiltank/yolov5s/utils/google_utils.py", line 39, in attempt_download
+    torch.hub.download_url_to_file(url, file)
+  File "/media/lxd/package/anaconda3/lib/python3.7/site-packages/torch/hub.py", line 394, in download_url_to_file
+    u = urlopen(req)
+  File "/media/lxd/package/anaconda3/lib/python3.7/urllib/request.py", line 222, in urlopen
+    return opener.open(url, data, timeout)
+  File "/media/lxd/package/anaconda3/lib/python3.7/urllib/request.py", line 525, in open
+    response = self._open(req, data)
+  File "/media/lxd/package/anaconda3/lib/python3.7/urllib/request.py", line 543, in _open
+    '_open', req)
+  File "/media/lxd/package/anaconda3/lib/python3.7/urllib/request.py", line 503, in _call_chain
+    result = func(*args)
+  File "/media/lxd/package/anaconda3/lib/python3.7/urllib/request.py", line 1362, in https_open
+    context=self._context, check_hostname=self._check_hostname)
+  File "/media/lxd/package/anaconda3/lib/python3.7/urllib/request.py", line 1319, in do_open
+    encode_chunked=req.has_header('Transfer-encoding'))
+  File "/media/lxd/package/anaconda3/lib/python3.7/http/client.py", line 1252, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "/media/lxd/package/anaconda3/lib/python3.7/http/client.py", line 1298, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "/media/lxd/package/anaconda3/lib/python3.7/http/client.py", line 1247, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/media/lxd/package/anaconda3/lib/python3.7/http/client.py", line 1026, in _send_output
+    self.send(msg)
+  File "/media/lxd/package/anaconda3/lib/python3.7/http/client.py", line 966, in send
+    self.connect()
+  File "/media/lxd/package/anaconda3/lib/python3.7/http/client.py", line 1414, in connect
+    super().connect()
+  File "/media/lxd/package/anaconda3/lib/python3.7/http/client.py", line 938, in connect
+    (self.host,self.port), self.timeout, self.source_address)
+  File "/media/lxd/package/anaconda3/lib/python3.7/socket.py", line 716, in create_connection
+    sock.connect(sa)
+KeyboardInterrupt
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "train.py", line 539, in <module>
+    train(hyp, opt, device, tb_writer)
+  File "train.py", line 86, in train
+    attempt_download(weights)  # download if not found locally
+  File "/media/lxd/workspace/Aricraft_oiltank/yolov5s/utils/google_utils.py", line 49, in attempt_download
+    file.unlink(missing_ok=True)  # remove partial downloads
+TypeError: unlink() got an unexpected keyword argument 'missing_ok'

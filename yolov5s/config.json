@@ -1,0 +1,8 @@
+//Input_imgpath = params['InputImgPath']
+//classes_path = params['classes_path']
+//anchors_path=params['anchors_path']
+//nms= params['nms_thresh']
+//score_threshold = float(params['score_threshold'])
+//weights_file = params['WeightFile']
+//output_path = params['OutputPath']
+

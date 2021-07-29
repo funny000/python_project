@@ -1,0 +1,18 @@
+{
+    "os": "Linux-5.4.0-73-generic-x86_64-with-debian-buster-sid",
+    "python": "3.7.6",
+    "heartbeatAt": "2021-07-14T00:50:14.668526",
+    "startedAt": "2021-07-14T00:50:13.859447",
+    "docker": null,
+    "gpu": "TITAN RTX",
+    "gpu_count": 4,
+    "cpu_count": 80,
+    "cuda": "10.1.168",
+    "args": [],
+    "state": "running",
+    "program": "train.py",
+    "codePath": "train.py",
+    "host": "thelas-Super-Server",
+    "username": "lxd",
+    "executable": "/media/lxd/package/anaconda3/bin/python"
+}
