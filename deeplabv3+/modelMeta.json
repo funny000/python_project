@@ -1,0 +1,17 @@
+{
+	"commend":"必填项",
+	"name": "SAR影像水域提取",
+	"weight": "best.pth",
+	"commend":"选填项",
+	"labels": "SAR,水域",
+	"description": "该模型是基于pytorch 1.7深度学习框架，使用SAR水体影像样本训练得到",
+	"network": {
+		"name": "deeplabv3plus",
+		"thumbnail": "model.jpg"
+	},
+	"icon":"存放模型的原始及预测图片，图片名称需统一，详情查看REAMDE.md",
+	"evaluate":{
+		"description":{"f1": "F1分数",  "P": "精确度",  "R": "召回率",  "mAP": "mAP"},
+		"best":{"f1":0.82755157,"P": 0.9323973360,  "R": 0.74390168,  "mAP": 0.7323175597}
+	}
+}
