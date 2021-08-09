@@ -20,7 +20,7 @@ from models.experimental import attempt_load
 import torch.backends.cudnn as cudnn
 from PIL import Image, ImageFont, ImageDraw
 from torch.autograd import Variable
-from aiUtils import aiUtils
+# from aiUtils import aiUtils
 
 from utils.general import non_max_suppression, bbox_iou, yolo_correct_boxes, DecodeBox
 # from utils.utils import non_max_suppression, bbox_iou, DecodeBox, letterbox_image, yolo_correct_boxes
@@ -34,8 +34,25 @@ import json
 import chardet
 from tqdm import tqdm
 
+# basedir = os.path.abspath(os.path.dirname(__file__))
+
+basedir = '.'
+conf = os.path.join(basedir, "traincfg.json")
+with open(conf, 'r', encoding='utf8') as cf:
+    params = json.load(cf)
+Input_imgpath = params['InputImgPath']
+score_threshold = float(params['score_threshold'])
+weights_file = './output/yolov5s.pt'
+output_path = './output'
+
+# classes_path = params['classes_path']
+# anchors_path=params['anchors_path']
+# nms= params['nms_thresh']
+
+
+
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 warnings.filterwarnings('ignore')
 # --------------------------------------------#
 #   使用自己训练好的模型预测需要修改2个参数
@@ -248,7 +265,6 @@ class YOLO(object):
         ymin = y_start + patch_box[3]
         xmax = x_start + patch_box[4]
         ymax = y_start + patch_box[5]
-
         image_box = [patch_box[0], patch_box[1], xmin, ymin, xmax, ymax]
         return image_box
 
@@ -307,10 +323,9 @@ class YOLO(object):
             os.makedirs(output_path)
         img = im_data_3Band
 
-        temp = 608
-
-        x_idx = range(0, img.shape[1], temp - 208)
-        y_idx = range(0, img.shape[0], temp - 208)
+        temp = 508
+        x_idx = range(0, img.shape[1], temp - 108)
+        y_idx = range(0, img.shape[0], temp - 108)
         rslt_mask = np.zeros((height, width, outbandsize), dtype=np.uint8)
         mask_temp = np.zeros((temp, temp, outbandsize), dtype=np.uint8)
 
@@ -330,7 +345,6 @@ class YOLO(object):
                 if y_stop > img.shape[0]:
                     y_start = max(0, img.shape[0] - temp)
                     y_stop = img.shape[0]
-
                 image = img[y_start:y_stop, x_start:x_stop, 0:3]
                 mask_temp[0:(y_stop - y_start), 0:(x_stop - x_start), :] = image[:, :, :]
 
@@ -360,10 +374,9 @@ class YOLO(object):
                 #                                        nms_thres=0.3)
                 if batch_detections[0] is None:
                     continue
-
                 else:
                     batch_detections = batch_detections[0].cpu().numpy()
-                    top_index = batch_detections[:, 4] * batch_detections[:, 5] > score_threshold
+                    top_index = batch_detections[:, 4] * batch_detections[:, 5] >= 0 # score_threshold
                     top_conf = batch_detections[top_index, 4] * batch_detections[top_index, 5]
                     top_label = np.array(batch_detections[top_index, -1], np.int32)
                     top_bboxes = np.array(batch_detections[top_index, :4])
@@ -475,9 +488,10 @@ class YOLO(object):
                                                        strcoordinates_box[i][9]))
             oFeatureRectangle.SetGeometry(geomRectangle)
             oLayer.CreateFeature(oFeatureRectangle)
-
         oDS.Destroy()
         del dataset
+
+
 
 
 if __name__ == '__main__':
@@ -504,27 +518,29 @@ if __name__ == '__main__':
     # with open(config_path, 'r', encoding=enc) as f:
     #     params = json.load(f)
 
-    conf = input()
-    print('conf:',conf)
-    params = json.loads(conf)
-    Input_imgpath = params['InputImgPath']
-    classes_path = params['classes_path']
-    anchors_path=params['anchors_path']
-    nms= params['nms_thresh']
-    score_threshold = float(params['score_threshold'])
-    weights_file = params['WeightFile'] if params["WeightFile"] else best
-    output_path = params['OutputPath']
+    # conf = input()
+    # print('conf:',conf)
+    # conf = os.path.join(basedir, "traincfg.json")
+    # print(conf)
+    # params = json.loads(conf)
+    # Input_imgpath = params['InputImgPath']
+    # classes_path = params['classes_path']
+    # anchors_path=params['anchors_path']
+    # nms= params['nms_thresh']
+    # score_threshold = float(params['score_threshold'])
+    # weights_file = params['WeightFile'] if params["WeightFile"] else best
+    # output_path = params['OutputPath']
 
-    # classes_path = r"D:\WorkSpace\Aircarft_oiltank\yolov5s\two_classes.txt"
-    # anchors_path = r"D:\WorkSpace\Aircarft_oiltank\yolov5s\yolo_anchors.txt"
-    # Input_imgpath = r"D:\WorkSpace\Bijie_landslide_dataset\qianxi.tif"
-    # nms = 0.5
-    # score_threshold = 0.6
-    # weights_file = r"D:\WorkSpace\Bijie_landslide_dataset\best.pt"
-    # output_path = r"D:\WorkSpace\Bijie_landslide_dataset"
+    classes_path = r"D:\WorkSpace\Aircarft_oiltank\yolov5s\two_classes.txt"
+    anchors_path = r"D:\WorkSpace\Aircarft_oiltank\yolov5s\yolo_anchors.txt"
+    Input_imgpath = r"D:\WorkSpace\Bijie_landslide_dataset\qianxi.tif"
+    nms = 0.5
+    score_threshold = 0.6
+    weights_file = r"D:\WorkSpace\Bijie_landslide_dataset\best.pt"
+    output_path = r"D:\WorkSpace\Bijie_landslide_dataset"
 
+"""
     yolo = YOLO()
-
     filelist = []
     if isinstance(Input_imgpath, list):
         filelist = Input_imgpath
@@ -559,4 +575,4 @@ if __name__ == '__main__':
             yolo.detect_image(Input_imgpath, output_path)
         else:
             print("it is empty")
-
+"""

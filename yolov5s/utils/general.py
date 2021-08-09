@@ -609,7 +609,7 @@ def increment_path(path, exist_ok=True, sep=''):
 
 # 根据input_shape和image_shape之间的缩放比例来调整各个目标的坐标点
 def yolo_correct_boxes(top, left, bottom, right, input_shape, image_shape):
-    new_shape = image_shape*np.min(input_shape/image_shape)
+    new_shape = image_shape * np.min(input_shape/image_shape)
 
     offset = (input_shape-new_shape)/2./input_shape
     scale = input_shape/new_shape
@@ -622,7 +622,7 @@ def yolo_correct_boxes(top, left, bottom, right, input_shape, image_shape):
 
     box_mins = box_yx - (box_hw / 2.)
     box_maxes = box_yx + (box_hw / 2.)
-    boxes =  np.concatenate([
+    boxes = np.concatenate([
         box_mins[:, 0:1],
         box_mins[:, 1:2],
         box_maxes[:, 0:1],

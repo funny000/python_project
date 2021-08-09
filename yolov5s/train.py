@@ -10,7 +10,7 @@ from copy import deepcopy
 from pathlib import Path
 from threading import Thread
 
-from aiUtils import aiUtils
+# from aiUtils import aiUtils
 import uuid
 import numpy as np
 import torch.distributed as dist
@@ -20,7 +20,7 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.utils.data
 import yaml
-from torch.cuda import amp
+# from torch.cuda import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
@@ -533,10 +533,9 @@ if __name__ == '__main__':
     trainlog["best"] = dict()
     trainlog["end_time"] = ""
 
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', type=str, default=r'D:\WorkSpace\Aircarft_oiltank\yolov5s\yolov5s.pt', help='initial weights path')
-    parser.add_argument('--cfg', type=str, default='', help='model.yaml path')
+    parser.add_argument('--weights', type=str, default=r'D:\WorkSpace\upload_AIProject2\model\yolov5s.pt', help='initial weights path')
+    parser.add_argument('--cfg', type=str, default='yolov5s.yaml', help='model.yaml path')
     parser.add_argument('--data', type=str, default='data/coco128.yaml', help='data.yaml path')
     parser.add_argument('--hyp', type=str, default='data/hyp.scratch.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=2, help="number of epoch")
@@ -585,33 +584,35 @@ if __name__ == '__main__':
         check_requirements()
 
     # set train paramters
-    config = input()
-    params = json.loads(config)
-
+    # basedir = os.path.abspath(os.path.dirname(__file__))
+    # basedir = '.'
+    # config = os.path.join(basedir, 'traincfg.json')
+    config = r"../traincfg_new.json"
+    with open(config, 'r', encoding='utf8') as cf:
+        params = json.load(cf)
+    # params = json.load(config)
+    # params = json.dump()
     opt.class_name = params["class_name"]
-    opt.nc = params["nc"]
+    opt.nc = params["n_class"]
     opt.batch_size = int(params["batch_size"])
     opt.epochs = int(params["epochs"])
-    opt.linear_lr = float(params["lr"])
-    opt.weights = params["weights"]
+    opt.linear_lr = float(params["learning_rate"])
+    opt.weights = './yolov5s.pt'
     dataset_id = params["dataset_id"]
-    if dataset_id == "":
-        dataset_id = None
+    # if dataset_id == "":
+    #     dataset_id = None
     # get current path
-    basedir = os.getcwd()
+    # basedir = os.getcwd()
     s3Client = aiUtils.s3GetImg(datasetId = dataset_id)
     dataset_path = s3Client.path
     print("dataset path--------->{}".format(dataset_path))
     opt.train_path = dataset_path + "train/images"
     opt.valid_path = dataset_path + "valid/images"
 
-
     # with open(opt.data, "w+") as yf:
     #     yaml_data = yaml.load(yf, Loader=yaml.SafeLoader)
     # yaml_data['train'] = train_path
     # yaml_data["val"] = valid_path
-
-
 
     # Resume
     wandb_run = check_wandb_resume(opt)

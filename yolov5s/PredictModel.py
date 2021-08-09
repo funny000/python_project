@@ -6,7 +6,7 @@
 # python versions: Python3.7
 # file: yolov5s
 # license: (C)Copyright 2019-2021 liuxiaodong
-
+import datetime
 
 import cv2
 import numpy as np
@@ -42,6 +42,22 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 warnings.filterwarnings('ignore')
 
 # set the input file and state dict file
+# basedir = os.path.abspath(os.path.dirname(__file__))
+# conf = basedir + 'traincfg.json'
+# print('conf:', conf)
+# params = json.loads(conf)
+# Input_imgpath = params['InputImgPath']
+# classes_path = params['classes_path']
+# anchors_path = params['anchors_path']
+# nms= params['nms_thresh']
+# score_threshold = float(params['score_threshold'])
+# weights_file = params['WeightFile']
+weights_file = './output/yolov5s.pth'
+output_path = './output/predict'
+if not os.path.exists(output_path):
+    os.makedirs(output_path)
+
+
 # basedir = os.getcwd()
 # Input_imgpath = params['InputImgPath']
 # classes_path = basedir + "/class.txt"
@@ -50,6 +66,7 @@ warnings.filterwarnings('ignore')
 # score_threshold = 0.4
 # weights_file = basedir + "/*.th"
 # output_path = basedir + "/output"
+
 # --------------------------------------------#
 #   使用自己训练好的模型预测需要修改2个参数
 #   model_path和classes_path都需要修改！
@@ -108,21 +125,16 @@ class YOLO(object):
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # state_dict = torch.load(weights_file, map_location=device)
         # self.net.load_state_dict(state_dict)
-
         self.net = attempt_load(weights_file)
-
         if self.cuda:
             os.environ["CUDA_VISIBLE_DEVICES"] = '0'
             self.net = nn.DataParallel(self.net)
             self.net = self.net.cuda()
-
         print('Finished!')
-
         self.yolo_decodes = []
         for i in range(3):
             self.yolo_decodes.append(
                 DecodeBox(self.anchors[i], len(self.class_names), (self.model_image_size[1], self.model_image_size[0])))
-
         print('{} model, anchors, and classes loaded.'.format(weights_file))
         # 画框设置不同的颜色
         hsv_tuples = [(x / len(self.class_names), 1., 1.)
@@ -205,13 +217,11 @@ class YOLO(object):
                     sby = abs(y11 - y12)
                     # --------------------相交--------------------------
                     if lx <= (sax + sbx) / 2 and ly <= (say + sby) / 2:
-
                         col = min(x02, x12) - max(x01, x11)
                         row = min(y02, y12) - max(y01, y11)
                         intersection = col * row
                         area1 = (x02 - x01) * (y02 - y01)
                         area2 = (x12 - x11) * (y12 - y11)
-
                         area1_ratio = intersection / area1
                         area2_ratio = intersection / area2
                         if area1_ratio > area_th_ratio:
@@ -246,7 +256,6 @@ class YOLO(object):
             t[t < a] = a
             t[t > b] = b
             out[:, :, i] = t
-
         return out
 
     # ----------------------------------------------------------#
@@ -300,7 +309,8 @@ class YOLO(object):
         outfileName = outfileName.rsplit('.', 1)[0]
         # outdataset = driver.Create(output_path + "/"  + outfileName +'_mask' +".tif", width, height, outbandsize,
         #                            gdal.GDT_Byte)
-        ShpFileName = output_path + "/" + "out_" + outfileName + ".shp"
+        now_time = datetime.datetime.now()
+        ShpFileName = output_path + "/" + "out_" + outfileName + "{}_.shp".format(now_time.strftime("%S"))
         # ------------------------------------设置投影信息---------------------------
         srs = osr.SpatialReference()
         srs.ImportFromWkt(dataset.GetProjectionRef())
@@ -315,9 +325,9 @@ class YOLO(object):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         img = im_data_3Band
-        temp = 608
-        x_idx = range(0, img.shape[1], temp - 208)
-        y_idx = range(0, img.shape[0], temp - 208)
+        temp = 508
+        x_idx = range(0, img.shape[1], temp - 108)
+        y_idx = range(0, img.shape[0], temp - 108)
         rslt_mask = np.zeros((height, width, outbandsize), dtype=np.uint8)
         mask_temp = np.zeros((temp, temp, outbandsize), dtype=np.uint8)
         out_boxes = []
@@ -343,89 +353,8 @@ class YOLO(object):
         else:
             # small picture
             self.predict_samll_image_new(img, weights_file)
-        # for x_start in x_idx:
-        #     for y_start in y_idx:
-        #         x_stop = x_start + temp
-        #         if x_stop > img.shape[1]:
-        #             x_start = max(0, img.shape[1] - temp)
-        #             x_stop = img.shape[1]
-        #         y_stop = y_start + temp
-        #         if y_stop > img.shape[0]:
-        #             y_start = max(0, img.shape[0] - temp)
-        #             y_stop = img.shape[0]
-
-                # image = img[y_start:y_stop, x_start:x_stop, 0:3]
-                # mask_temp[0:(y_stop - y_start), 0:(x_stop - x_start), :] = image[:, :, :]
-                #
-                # image_shape = np.array(np.shape(mask_temp)[0:2])
-                # photo = np.array(mask_temp, dtype=np.float64)
-                #
-                # photo /= 255.0
-                # photo = np.transpose(photo, (2, 0, 1))
-                # photo = photo.astype(np.float32)
-                # images = []
-                # images.append(photo)
-                # images = np.asarray(images)
-                #
-                # with torch.no_grad():
-                #     images = torch.from_numpy(images)
-                #     if self.cuda:
-                #         images = images.cuda()
-                #     outputs = self.net(images)[0]
-                #
-                # # output_list = []
-                # # for i in range(3):
-                # #     output_list.append(self.yolo_decodes[i](outputs[i]))
-                # # output = torch.cat(output_list, 1)
-                # batch_detections = non_max_suppression(outputs)
-                # # batch_detections = non_max_suppression(output, len(self.class_names),
-                # #                                        conf_thres=score_threshold,
-                # #                                        nms_thres=0.3)
-                # if batch_detections[0] is None:
-                #     continue
-                #
-                # else:
-                #     batch_detections = batch_detections[0].cpu().numpy()
-                #     top_index = batch_detections[:, 4] * batch_detections[:, 5] > score_threshold
-                #     top_conf = batch_detections[top_index, 4] * batch_detections[top_index, 5]
-                #     top_label = np.array(batch_detections[top_index, -1], np.int32)
-                #     top_bboxes = np.array(batch_detections[top_index, :4])
-                #     top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(top_bboxes[:, 0], -1), np.expand_dims(
-                #         top_bboxes[:, 1],
-                #         -1), np.expand_dims(
-                #         top_bboxes[:, 2], -1), np.expand_dims(top_bboxes[:, 3], -1)
-                #
-                #     # 去掉灰条
-                #     boxes = yolo_correct_boxes(top_ymin, top_xmin, top_ymax, top_xmax,
-                #                                np.array([self.model_image_size[0], self.model_image_size[1]]),
-                #                                image_shape)
-                #     # font = ImageFont.truetype(font='model_data/simhei.ttf',
-                #     #                           size=np.floor(3e-2 * np.shape(image)[1] + 0.5).astype('int32'))
-                #
-                #     # thickness = (np.shape(image)[0] + np.shape(image)[1]) // self.model_image_size[0]
-                #     for i, c in enumerate(top_label):
-                #         predicted_class = self.class_names[c]
-                #         score = top_conf[i]
-                #
-                #         top, left, bottom, right = boxes[i]
-                #         top = top - 5
-                #         left = left - 5
-                #         bottom = bottom + 5
-                #         right = right + 5
-                #
-                #         patch_box = [int(c), score, left, top, right, bottom]
-                #         boxes_mc = self.get_region_boxes(patch_box, x_start, y_start)
-                #
-                #         all_boxes.append(boxes_mc)
-                #     count += 1
-                #     now_progress = int(100 * count / total_progress)
-                #     if now_progress < 100:
-                #         print("[AIProgress] {} {}".format(filename, now_progress), flush=True)
-
-            out_boxes = self.py_cpu_nms(np.array(all_boxes), float(nms))
+        out_boxes = self.py_cpu_nms(np.array(all_boxes), float(nms))
         print("[AIProgress] {} 100".format(filename), flush=True)
-
-            # print(out_boxes)
         for k, out_box in enumerate(out_boxes):  # 对每个目标进行处理，按原始尺寸进行缩放
             classes = self.class_names[int(out_boxes[k][0])]
             xmin = xbase + out_boxes[k][2] * xoffset + out_boxes[k][3] * xscale
@@ -502,6 +431,13 @@ class YOLO(object):
         del dataset
 
     def predict_samll_image_new(self, img, weight_file, output_path=None):
+        """
+        new function to predict image
+        :param img:
+        :param weight_file:
+        :param output_path:
+        :return:
+        """
         model = attempt_load(weight_file, map_location = 'cpu')
         output_path = os.path.join(os.getcwd(), "pred.jpg")
         names = self.net.module.names if hasattr(self.net, 'module') else self.net.names
@@ -513,8 +449,6 @@ class YOLO(object):
         img = torch.from_numpy(img).to("cpu")
         img = img.float()
         img /= 255.0
-        # img = torch.transpose(img, (0, 3, 1, 2))
-        # img = img.transpose(0, 3, 1, 2)
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
         pred = model(img)[0]
@@ -526,11 +460,11 @@ class YOLO(object):
                     label = f'{names[int(cls)]}{conf:.2f}'
                     plot_one_box(xyxy, img0, label, colors[0])
             cv2.imwrite(output_path, img0)
-
+        return pred
 
     def predict_small_image(self, img, mask_temp, width, height, all_boxes, count, total_progress, filename):
         """
-
+        process small or ndarray image
         :param img:
         :param mask_temp:
         :param width:
@@ -561,16 +495,8 @@ class YOLO(object):
                 images = images.cuda()
             outputs = self.net(images)[0]
 
-        # output_list = []
-        # for i in range(3):
-        #     output_list.append(self.yolo_decodes[i](outputs[i]))
-        # output = torch.cat(output_list, 1)
         batch_detections = non_max_suppression(outputs)
-        # batch_detections = non_max_suppression(output, len(self.class_names),
-        #                                        conf_thres=score_threshold,
-        #                                        nms_thres=0.3)
         if batch_detections[0] is None:
-            # continue
             pass
         else:
             batch_detections = batch_detections[0].cpu().numpy()
@@ -587,10 +513,6 @@ class YOLO(object):
             boxes = yolo_correct_boxes(top_ymin, top_xmin, top_ymax, top_xmax,
                                        np.array([self.model_image_size[0], self.model_image_size[1]]),
                                        image_shape)
-            # font = ImageFont.truetype(font='model_data/simhei.ttf',
-            #                           size=np.floor(3e-2 * np.shape(image)[1] + 0.5).astype('int32'))
-
-            # thickness = (np.shape(image)[0] + np.shape(image)[1]) // self.model_image_size[0]
             for i, c in enumerate(top_label):
                 predicted_class = self.class_names[c]
                 score = top_conf[i]
@@ -599,10 +521,8 @@ class YOLO(object):
                 left = left - 5
                 bottom = bottom + 5
                 right = right + 5
-
                 patch_box = [int(c), score, left, top, right, bottom]
                 boxes_mc = self.get_region_boxes(patch_box, 0, 0)
-
                 all_boxes.append(boxes_mc)
             count += 1
             now_progress = int(100 * count / total_progress)
@@ -613,7 +533,7 @@ class YOLO(object):
 
     def predict_big_image(self, img, mask_temp, y_start, y_stop, x_start, x_stop, all_boxes, count, total_progress, filename):
         """
-
+        process big image
         :param img:
         :param mask_temp:
         :param y_start:
@@ -644,21 +564,13 @@ class YOLO(object):
             if self.cuda:
                 images = images.cuda()
             outputs = self.net(images)[0]
-
-        # output_list = []
-        # for i in range(3):
-        #     output_list.append(self.yolo_decodes[i](outputs[i]))
-        # output = torch.cat(output_list, 1)
         batch_detections = non_max_suppression(outputs)
-        # batch_detections = non_max_suppression(output, len(self.class_names),
-        #                                        conf_thres=score_threshold,
-        #                                        nms_thres=0.3)
         if batch_detections[0] is None:
-            # continue
             pass
         else:
             batch_detections = batch_detections[0].cpu().numpy()
-            top_index = batch_detections[:, 4] * batch_detections[:, 5] > score_threshold
+            print(batch_detections[:, 4] * batch_detections[:, 5])
+            top_index = batch_detections[:, 4] * batch_detections[:, 5] >= 0 # score_threshold
             top_conf = batch_detections[top_index, 4] * batch_detections[top_index, 5]
             top_label = np.array(batch_detections[top_index, -1], np.int32)
             top_bboxes = np.array(batch_detections[top_index, :4])
@@ -666,28 +578,20 @@ class YOLO(object):
                 top_bboxes[:, 1],
                 -1), np.expand_dims(
                 top_bboxes[:, 2], -1), np.expand_dims(top_bboxes[:, 3], -1)
-
             # 去掉灰条
             boxes = yolo_correct_boxes(top_ymin, top_xmin, top_ymax, top_xmax,
                                        np.array([self.model_image_size[0], self.model_image_size[1]]),
                                        image_shape)
-            # font = ImageFont.truetype(font='model_data/simhei.ttf',
-            #                           size=np.floor(3e-2 * np.shape(image)[1] + 0.5).astype('int32'))
-
-            # thickness = (np.shape(image)[0] + np.shape(image)[1]) // self.model_image_size[0]
             for i, c in enumerate(top_label):
                 predicted_class = self.class_names[c]
                 score = top_conf[i]
-
                 top, left, bottom, right = boxes[i]
                 top = top - 5
                 left = left - 5
                 bottom = bottom + 5
                 right = right + 5
-
                 patch_box = [int(c), score, left, top, right, bottom]
                 boxes_mc = self.get_region_boxes(patch_box, x_start, y_start)
-
                 all_boxes.append(boxes_mc)
             count += 1
             now_progress = int(100 * count / total_progress)
@@ -735,9 +639,6 @@ class PredictModel():
         :param meta: None
         :return: the predict result
         """
-        output_path = os.getcwd() + "/output"
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
         filelist = []
         if isinstance(Input_imgpath, list):
             filelist = Input_imgpath
@@ -767,7 +668,9 @@ class PredictModel():
                 self.yolov5.detect_image(Input_imgpath, output_path)
         elif isinstance(Input_imgpath, np.ndarray):
             self.yolov5.predict_samll_image_new(Input_imgpath, weights_file)
-            print("process success")
+            print("process success,{}".format(datetime.datetime.now().strftime("%Y-%m-%D %t-%m-%s")))
+        else:
+            print("the input data or file has to be follows format np.ndarray, file path, files path!")
 
 
 if __name__ == '__main__':
@@ -782,11 +685,11 @@ if __name__ == '__main__':
     # else:
     #     config_path = sys.argv[1]
 
-    save_dir = os.getcwd()
-    wdir = save_dir + '/' + 'weights'
-    # wdir.mkdir(parents=True, exist_ok=True)  # make dir
-    # last = wdir / 'last.pt'
-    best = wdir + '/' + 'best.pt'
+    # save_dir = os.getcwd()
+    # wdir = save_dir + '/' + 'weights'
+    # # wdir.mkdir(parents=True, exist_ok=True)  # make dir
+    # # last = wdir / 'last.pt'
+    # best = wdir + '/' + 'best.pt'
 
 
     # config_path = r"D:\WorkSpace\Aircarft_oiltank\config.json"
@@ -807,51 +710,13 @@ if __name__ == '__main__':
 
     classes_path = r"D:\WorkSpace\Aircarft_oiltank\yolov5s\two_classes.txt"
     anchors_path = r"D:\WorkSpace\Aircarft_oiltank\yolov5s\yolo_anchors.txt"
-    # Input_imgpath = r"D:\WorkSpace\Bijie_landslide_dataset\qianxi.tif"
+    Input_imgpath = r"D:\WorkSpace\Bijie_landslide_dataset\qianxi.tif"
     # Input_imgpath = r"D:\WorkSpace\Bijie_landslide_dataset\landslide_object\valid\images\qxg088.png"
-    Input_imgpath = r"D:\WorkSpace\Bijie_landslide_dataset\landslide_object\train\images\df002.png"
+    # Input_imgpath = r"D:\WorkSpace\Bijie_landslide_dataset\test_image\wn029.png"
     nms = 0.5
     score_threshold = 0.6
-    weights_file = r"D:\WorkSpace\Bijie_landslide_dataset\best.pt"
+    weights_file = r"D:\WorkSpace\Bijie_landslide_dataset\best.pt" #D:\WorkSpace\Bijie_landslide_dataset\best.pt
     output_path = r"D:\WorkSpace\Bijie_landslide_dataset"
-
-    Input_imgpath = cv2.imread(Input_imgpath)
+    # Input_imgpath = cv2.imread(Input_imgpath)
     model = PredictModel()
     print(model.predict(Input_imgpath))
-"""
-    yolo = YOLO()
-    filelist = []
-    if isinstance(Input_imgpath, list):
-        filelist = Input_imgpath
-        for i, idx_img in enumerate(filelist):
-            if os.path.isdir(idx_img):
-                img_list = [x for x in os.listdir(idx_img) if os.path.splitext(x)[1] in ['.tif', '.TIF','.tiff', '.jpg', '.png']]
-                for i, idx_img_1 in enumerate(img_list):
-                    print("[AIProgressFiles]: [{}/{}]".format(i + 1, len(img_list)))
-                    img_path = os.path.join(idx_img, idx_img_1)
-                    yolo.detect_image(img_path, output_path)
-            elif os.path.isfile(idx_img):
-                print("[AIProgressFiles]: [{}/{}]".format(1, 1))
-                yolo.detect_image(idx_img, output_path)
-            else:
-                print("it is empty")
-    elif Input_imgpath.endswith('.csv'):
-        img_list_file = open(Input_imgpath, 'r', encoding='UTF-8')
-        img_list = img_list_file.readlines()
-        img_list_file.close()
-        for i, idx_img in enumerate(img_list):
-            print("[AIProgressFiles]: [{}/{}]".format(i + 1, len(img_list)))
-            yolo.detect_image(Input_imgpath, output_path)
-    else:
-        if os.path.isdir(Input_imgpath):
-            img_list = [x for x in os.listdir(Input_imgpath) if os.path.splitext(x)[1] in ['.tif', '.TIF','.tiff', '.jpg', '.png']]
-            for i, idx_img in enumerate(img_list):
-                print("[AIProgressFiles]: [{}/{}]".format(i + 1, len(img_list)))
-                img_path = os.path.join(Input_imgpath, idx_img)
-                yolo.detect_image(img_path, output_path)
-        elif os.path.isfile(Input_imgpath):
-            print("[AIProgressFiles]: [{}/{}]".format(1, 1))
-            yolo.detect_image(Input_imgpath, output_path)
-        else:
-            print("it is empty")
-"""
