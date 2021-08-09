@@ -1,0 +1,11 @@
+GDAL==3.1.4
+rasterio==1.2.0
+albumentations
+opencv-python
+tqdm
+torch==1.5.1
+torchvision==0.6.1
+segmentation-models-pytorch
+torchmetrics==0.3.2
+
+
